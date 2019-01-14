@@ -3,6 +3,17 @@ import scriptLoader from "react-async-script-loader";
 import TextField from "@material-ui/core/TextField";
 
 class Map extends Component {
+  constructor() {
+    super();
+    this.state = {
+      zoom: 13,
+      maptype: "roadmap",
+      place_formatted: "",
+      place_id: "",
+      place_location: ""
+    };
+  }
+
   componentWillReceiveProps({ isScriptLoadSucceed }) {
     if (isScriptLoadSucceed) {
       var markers = [];
@@ -15,17 +26,16 @@ class Map extends Component {
 
       // Create the search box and link it to the UI element.
       var input = document.getElementById("custom-css-outlined-input");
-      console.log(window.google.maps.places);
       var searchBox = new window.google.maps.places.SearchBox(input);
 
       // Bias the SearchBox results towards current map's viewport.
-      map.addListener("bounds_changed", function() {
+      map.addListener("bounds_changed", () => {
         searchBox.setBounds(map.getBounds());
       });
 
       // Listen for the event fired when the user selects a prediction and retrieve
       // more details for that place.
-      searchBox.addListener("places_changed", function() {
+      searchBox.addListener("places_changed", () => {
         var places = searchBox.getPlaces();
 
         if (places.length === 0) {
@@ -33,16 +43,17 @@ class Map extends Component {
         }
 
         // Clear out the old markers.
-        markers.forEach(function(marker) {
+        markers.forEach(marker => {
           marker.setMap(null);
         });
         markers = [];
 
         // For each place, get the icon, name and location.
         var bounds = new window.google.maps.LatLngBounds();
-        places.forEach(function(place) {
+        places.forEach(place => {
+          let location = place.geometry.location;
+
           if (!place.geometry) {
-            console.log("Returned place contains no geometry");
             return;
           }
           var icon = {
@@ -69,6 +80,12 @@ class Map extends Component {
           } else {
             bounds.extend(place.geometry.location);
           }
+
+          this.setState({
+            place_formatted: place.formatted_address,
+            place_id: place.place_id,
+            place_location: location.toString()
+          });
         });
         map.fitBounds(bounds);
       });
@@ -78,8 +95,9 @@ class Map extends Component {
   }
 
   render() {
-    console.log(this.props);
-    console.log(this.props.isScriptLoadSucceed);
+    console.log("props: ", this.props);
+    console.log("state: ", this.state);
+    console.log("zoom: ");
 
     return (
       <div style={{ width: "100%", height: "100%" }}>
